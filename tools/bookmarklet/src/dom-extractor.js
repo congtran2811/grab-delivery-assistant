@@ -1,51 +1,95 @@
-// Bookmarklet source for scraping Grab PGĐT
-(function() {
-  function extractData() {
+(async function() {
+  async function extractData() {
     try {
-      // Logic would adapt to actual Grab DOM, here's a generic assumption
-      const tripIdElem = document.querySelector('.trip-id-selector') || document.querySelector('h1');
-      const trip_id = tripIdElem ? tripIdElem.innerText.trim().replace('Trip: ', '') : `TRIP_${Date.now()}`;
-      
-      const orderNodes = document.querySelectorAll('.order-card-selector'); // Mock selector
+      const trip_id = `TRIP_${Date.now()}`;
       let orders = [];
       
-      if (orderNodes.length === 0) {
-        // Mock data fallback for demonstration if selectors fail
-        orders = [
-          { order_code: 'ORD-001', recipient_name: 'John Doe', phone: '0123456789', address: '123 Fake St', cod_amount: 150000 },
-          { order_code: 'ORD-002', recipient_name: 'Jane Smith', phone: '0987654321', address: '456 Mock Ave', cod_amount: 0 }
-        ];
-      } else {
-        orderNodes.forEach((node, index) => {
+      const findInputByLabel = (labelText) => {
+        const elements = Array.from(document.querySelectorAll('div, p, span, label'));
+        const labelEl = elements.find(el => el.innerText && el.innerText.trim().includes(labelText));
+        if (labelEl) {
+          let nextEl = labelEl.nextElementSibling;
+          while(nextEl) {
+            const input = nextEl.tagName === 'INPUT' || nextEl.tagName === 'TEXTAREA' || nextEl.tagName === 'SELECT' ? nextEl : nextEl.querySelector('input, textarea, select');
+            if (input) return input;
+            nextEl = nextEl.nextElementSibling;
+          }
+          const parentInput = labelEl.parentElement.querySelector('input, textarea, select');
+          if (parentInput) return parentInput;
+        }
+        return null;
+      };
+
+      const extractCurrentRecipient = () => {
+        let recipient_name = '';
+        let phone = '';
+        let address = '';
+        const nguoiNhanIndex = Array.from(document.querySelectorAll('*')).findIndex(el => el.innerText && el.innerText.trim() === 'Người nhận:');
+        if (nguoiNhanIndex !== -1) {
+          const afterNguoiNhan = Array.from(document.querySelectorAll('*')).slice(nguoiNhanIndex);
+          const inputsAfter = afterNguoiNhan.filter(el => el.tagName === 'INPUT' || el.tagName === 'TEXTAREA');
+          if (inputsAfter.length >= 3) {
+            recipient_name = inputsAfter[0].value.trim();
+            phone = inputsAfter[1].value.trim();
+            address = inputsAfter[2].value.trim();
+          }
+        }
+        return { recipient_name, phone, address };
+      };
+
+      const orderField = findInputByLabel('Mã đơn hàng');
+      
+      if (orderField && orderField.tagName === 'SELECT') {
+        const options = Array.from(orderField.options);
+        for (let i = 0; i < options.length; i++) {
+          orderField.value = options[i].value;
+          orderField.dispatchEvent(new Event('change', { bubbles: true }));
+          await new Promise(r => setTimeout(r, 300));
+          
+          const rec = extractCurrentRecipient();
           orders.push({
-            order_code: node.querySelector('.code')?.innerText.trim() || `ORD-${index}`,
-            recipient_name: node.querySelector('.name')?.innerText.trim() || 'Unknown',
-            phone: node.querySelector('.phone')?.innerText.trim() || '',
-            address: node.querySelector('.address')?.innerText.trim() || 'Unknown Address',
-            cod_amount: parseInt(node.querySelector('.cod')?.innerText.replace(/\D/g, '') || '0', 10),
+            order_code: options[i].text.trim() || `ORD-${Date.now()}`,
+            recipient_name: rec.recipient_name || 'Khách hàng',
+            phone: rec.phone || '',
+            address: rec.address || 'Chưa rõ địa chỉ',
+            cod_amount: 0,
+            shipping_fee_payer: 'SENDER'
           });
-        });
+        }
+      } else {
+        let order_code = orderField ? orderField.value.trim() : '';
+        const allInputs = Array.from(document.querySelectorAll('input, textarea'));
+        if (!order_code && allInputs.length > 0) order_code = allInputs[0].value.trim();
+        
+        if (!order_code && allInputs.length === 0) {
+          orders = [
+            { order_code: 'ORD-001', recipient_name: 'Khách hàng Demo', phone: '0123456789', address: '123 Đường Ảo, Quận 1', cod_amount: 150000, shipping_fee_payer: 'SENDER' }
+          ];
+        } else {
+          const rec = extractCurrentRecipient();
+          orders.push({
+            order_code: order_code || `ORD-${Date.now()}`,
+            recipient_name: rec.recipient_name || 'Khách hàng',
+            phone: rec.phone || '',
+            address: rec.address || 'Chưa rõ địa chỉ',
+            cod_amount: 0,
+            shipping_fee_payer: 'SENDER'
+          });
+        }
       }
 
       const payload = { trip_id, orders };
-
-      // Send to local API for development, change to prod URL later
-      fetch('http://localhost:3001/api/v1/sync-grab-orders', {
+      const res = await fetch('http://localhost:3001/api/v1/sync-grab-orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
-      })
-      .then(res => res.json())
-      .then(data => {
-        if(data.success) {
-          alert('Sync successful! ' + data.data.length + ' orders synced.');
-        } else {
-          alert('Sync failed: ' + data.error);
-        }
-      })
-      .catch(err => alert('Network error: ' + err.message));
+      });
+      const data = await res.json();
+      
+      if(data.success) alert('Đồng bộ thành công! ' + data.data.length + ' đơn hàng.');
+      else alert('Đồng bộ thất bại: ' + data.error);
     } catch (e) {
-      alert('Extraction error: ' + e.message);
+      alert('Lỗi lấy dữ liệu: ' + e.message);
     }
   }
   extractData();

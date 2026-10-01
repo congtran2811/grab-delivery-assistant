@@ -30,6 +30,7 @@ async function syncOrders(tripId, orders) {
       phone: order.phone,
       address: order.address,
       cod_amount: order.cod_amount,
+      shipping_fee_payer: order.shipping_fee_payer || 'SENDER',
       sequence: index, // Update sequence from bookmarklet
       // Preserve existing states or set defaults
       payment_status: existing?.payment_status || PaymentStatus.UNPAID,

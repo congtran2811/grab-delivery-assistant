@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grab PGĐT - Phiếu Gửi</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background-color: white;
+            border: 4px solid #009040;
+            padding: 20px;
+            width: 500px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #4CAF50;
+            font-size: 32px;
+            text-transform: uppercase;
+        }
+        .section-box {
+            border: 2px solid red;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            color: #555;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        h3 {
+            margin-top: 0;
+            color: #333;
+            font-size: 18px;
+        }
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+            color: #333;
+        }
+        textarea {
+            resize: vertical;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>PHIẾU GỬI</h1>
+
+    <!-- Phần Mã Đơn Hàng -->
+    <div class="section-box">
+        <label>Mã đơn hàng:</label>
+        <input type="text" value="IN-2-00CM0G8S5SC72DAEQMM4" readonly>
+    </div>
+
+    <!-- Phần Thông Tin Giao Nhận -->
+    <div class="section-box">
+        <h3>Người gửi:</h3>
+        <div class="grid-2">
+            <div>
+                <label>Họ Tên:</label>
+                <input type="text" value="Ngô Văn A" readonly>
+            </div>
+            <div>
+                <label>Số Điện Thoại:</label>
+                <input type="text" value="+84912345678" readonly>
+            </div>
+        </div>
+        <div style="margin-bottom: 20px;">
+            <label>Địa chỉ:</label>
+            <input type="text" value="Đường số 14, Phường Tân Phong, Quận 7, Hồ Chí Minh, 70000" readonly>
+        </div>
+
+        <h3>Người nhận:</h3>
+        <div class="grid-2">
+            <div>
+                <label>Họ Tên:</label>
+                <input type="text" value="Ngô Văn B">
+            </div>
+            <div>
+                <label>Số Điện Thoại:</label>
+                <input type="text" value="+84987654321">
+            </div>
+        </div>
+        <div style="margin-bottom: 15px;">
+            <label>Địa chỉ:</label>
+            <input type="text" value="1058 Nguyễn Văn Linh, Phường Tân Phong, Quận 7, Hồ Chí Minh">
+        </div>
+        
+        <div>
+            <label>Nội dung hàng hóa:</label>
+            <textarea rows="3">Thực phẩm</textarea>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

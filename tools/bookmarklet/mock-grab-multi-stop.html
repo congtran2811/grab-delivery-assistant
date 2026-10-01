@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grab PGĐT - Giao Hàng Nhiều Điểm</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            background-color: white;
+            border: 1px solid #ddd;
+            padding: 20px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border-radius: 8px;
+        }
+        h3 {
+            margin-top: 20px;
+            margin-bottom: 15px;
+            color: #333;
+            font-size: 18px;
+        }
+        label {
+            display: block;
+            color: #555;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ccc;
+            background-color: #fff;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        input:read-only {
+            background-color: #f9f9f9;
+            color: #666;
+        }
+        .select-wrapper {
+            position: relative;
+        }
+        select {
+            appearance: none;
+            border-color: #00B14F;
+            border-width: 2px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="select-wrapper">
+        <label>Mã đơn hàng:</label>
+        <select id="orderSelect">
+            <option value="0">MS-2-007WFOAGLF7V71</option>
+            <option value="1">MS-2-007WFOAGLFD8J1</option>
+            <option value="2">MS-2-007WFOAGLFE6RK</option>
+            <option value="3">MS-2-007WFOAGLFFSZ</option>
+            <option value="4">MS-2-007WFOAGLFJZ6L</option>
+            <option value="5">MS-2-007WFOAGLFMF5</option>
+            <option value="6">MS-2-007WFOAGLFORZ</option>
+            <option value="7">MS-2-007WFOAGLFOU7</option>
+            <option value="8">MS-2-007WFOAGLFZ2D</option>
+        </select>
+    </div>
+
+    <h3>Người gửi:</h3>
+    <div>
+        <label>Họ Tên:</label>
+        <input type="text" value="Nguyễn Văn Tài Xế" readonly>
+    </div>
+    <div>
+        <label>Số Điện Thoại:</label>
+        <input type="text" value="+84922888999" readonly>
+    </div>
+
+    <h3>Người nhận:</h3>
+    <div>
+        <label>Họ Tên:</label>
+        <input type="text" id="rec_name" value="">
+    </div>
+    <div>
+        <label>Số Điện Thoại:</label>
+        <input type="text" id="rec_phone" value="">
+    </div>
+    <div>
+        <label>Địa chỉ:</label>
+        <input type="text" id="rec_address" value="">
+    </div>
+</div>
+
+<script>
+    const mockData = [
+        { name: "Khách Điểm 1", phone: "+84900000001", address: "123 Quận 1, TP.HCM" },
+        { name: "Khách Điểm 2", phone: "+84900000002", address: "456 Quận 2, TP.HCM" },
+        { name: "Khách Điểm 3", phone: "+84900000003", address: "789 Quận 3, TP.HCM" },
+        { name: "Khách Điểm 4", phone: "+84900000004", address: "101 Quận 4, TP.HCM" },
+        { name: "Khách Điểm 5", phone: "+84900000005", address: "202 Quận 5, TP.HCM" },
+        { name: "Khách Điểm 6", phone: "+84900000006", address: "303 Quận 6, TP.HCM" },
+        { name: "Khách Điểm 7", phone: "+84900000007", address: "404 Quận 7, TP.HCM" },
+        { name: "Khách Điểm 8", phone: "+84900000008", address: "505 Quận 8, TP.HCM" },
+        { name: "Khách Điểm 9", phone: "+84900000009", address: "606 Quận 9, TP.HCM" },
+    ];
+
+    const select = document.getElementById('orderSelect');
+    const nameInput = document.getElementById('rec_name');
+    const phoneInput = document.getElementById('rec_phone');
+    const addressInput = document.getElementById('rec_address');
+
+    function updateFields() {
+        const data = mockData[select.value];
+        nameInput.value = data.name;
+        phoneInput.value = data.phone;
+        addressInput.value = data.address;
+    }
+
+    select.addEventListener('change', updateFields);
+    // Init
+    updateFields();
+</script>
+
+</body>
+</html>

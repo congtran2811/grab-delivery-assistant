@@ -17,8 +17,10 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
+    // Allow requests with no origin, or 'null' (from file://)
+    if (!origin || origin === 'null') return callback(null, true);
+    if (process.env.CORS_ORIGIN === '*' || process.env.CORS_ORIGIN === origin) return callback(null, true);
+    
     if (allowedOrigins.indexOf(origin) !== -1 || origin.startsWith('http://localhost:')) {
       return callback(null, true);
     }

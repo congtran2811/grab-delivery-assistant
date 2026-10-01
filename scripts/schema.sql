@@ -17,6 +17,8 @@ CREATE TABLE orders (
   actual_collected bigint,
   payment_status text DEFAULT 'UNPAID',
   delivery_status text DEFAULT 'PENDING',
+  shipping_fee_payer text DEFAULT 'SENDER',
+  shipping_fee_status text DEFAULT 'UNPAID',
   sequence integer,
   signature_image text,
   notes text,
