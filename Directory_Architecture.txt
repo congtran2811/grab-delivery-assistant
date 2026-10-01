@@ -1,0 +1,102 @@
+grab-delivery-assistant/
+├── .github/                      # CI/CD workflows, automated tests
+│   └── workflows/
+│       └── deploy.yml
+├── docs/                         # Tài liệu kỹ thuật, kiến trúc và API spec
+│   ├── API_SPEC.md
+│   └── BOOKMARKLET_GUIDE.md
+├── scripts/                      # Build scripts, minify bookmarklet, seed database
+│   ├── build-bookmarklet.js
+│   └── seed-data.js
+│
+├── apps/
+│   ├── api/                      # BACKEND SERVICE (Node.js / Express or Fastify)
+│   │   ├── src/
+│   │   │   ├── config/           # Biến môi trường, database connection, CORS config
+│   │   │   │   ├── cors.js
+│   │   │   │   ├── database.js
+│   │   │   │   └── env.js
+│   │   │   ├── controllers/      # Điều hướng request/response
+│   │   │   │   ├── order.controller.js
+│   │   │   │   ├── receipt.controller.js
+│   │   │   │   └── trip.controller.js
+│   │   │   ├── middlewares/      # Error handler, validate payload, rate limiter
+│   │   │   │   ├── errorHandler.js
+│   │   │   │   └── validateRequest.js
+│   │   │   ├── models/           # Database Schema & Data Access Layer (ORM/Kysely/Prisma/Knex)
+│   │   │   │   ├── order.model.js
+│   │   │   │   └── trip.model.js
+│   │   │   ├── routes/           # Định nghĩa REST API endpoints
+│   │   │   │   ├── index.js
+│   │   │   │   ├── order.routes.js
+│   │   │   │   └── trip.routes.js
+│   │   │   ├── services/         # Business logic cốt lõi (Re-order algorithm, Upsert logic, COD recalculation)
+│   │   │   │   ├── order.service.js
+│   │   │   │   └── sync.service.js
+│   │   │   └── server.js         # Entry point backend
+│   │   ├── .env.example
+│   │   └── package.json
+│   │
+│   └── web/                      # FRONTEND DRIVER PWA & PUBLIC E-RECEIPT (Vite + React / Next.js)
+│       ├── public/               # Static assets, icons, manifest PWA
+│       │   ├── icons/
+│       │   ├── manifest.json
+│       │   └── favicon.ico
+│       ├── src/
+│       │   ├── assets/           # SVG, hình ảnh minh họa
+│       │   ├── components/       # UI Components tái sử dụng
+│       │   │   ├── common/       # Button, Modal, Badge, Toast, Spinner
+│       │   │   │   ├── Badge.jsx
+│       │   │   │   ├── Button.jsx
+│       │   │   │   └── Modal.jsx
+│       │   │   ├── driver/       # Components dành riêng cho tài xế
+│       │   │   │   ├── CODMetricBar.jsx       # Thanh thống kê tiền COD realtime
+│       │   │   │   ├── OrderCard.jsx          # Thẻ đơn hàng (hỗ trợ drag)
+│       │   │   │   ├── OrderListDnD.jsx       # Danh sách kéo-thả thứ tự
+│       │   │   │   └── QuickNumberPad.jsx     # Bàn phím số nhập nhanh tiền thu
+│       │   │   └── receipt/      # Components trang khách ký nhận
+│       │   │       ├── OrderSummary.jsx
+│       │   │       └── SignaturePad.jsx       # Khung canvas ký tên
+│       │   ├── hooks/            # Custom React Hooks
+│       │   │   ├── useOrders.js
+│       │   │   ├── usePWAInstall.js
+│       │   │   └── useSignature.js
+│       │   ├── layouts/          # Layout bọc ngoài (DriverLayout, ReceiptLayout)
+│       │   │   ├── DriverLayout.jsx
+│       │   │   └── PublicLayout.jsx
+│       │   ├── pages/            # Màn hình chính
+│       │   │   ├── DriverDashboard.jsx        # Dashboard quản lý lộ trình
+│       │   │   ├── PublicReceipt.jsx          # Trang khách quét QR ký nhận
+│       │   │   └── NotFound.jsx
+│       │   ├── services/         # API clients (Axios / Fetch wrapper)
+│       │   │   ├── api.js
+│       │   │   └── orderApi.js
+│       │   ├── styles/           # Global CSS, Tailwind config
+│       │   │   └── globals.css
+│       │   ├── utils/            # Helper formats (tiền tệ VND, date-time, phone number)
+│       │   │   ├── currency.js
+│       │   │   └── formatters.js
+│       │   ├── App.jsx
+│       │   └── main.jsx
+│       ├── .env.example
+│       ├── tailwind.config.js
+│       ├── vite.config.js
+│       └── package.json
+│
+├── tools/
+│   └── bookmarklet/              # SCRIPT BÓC TÁCH DỮ LIỆU TỪ GRAB PGĐT
+│       ├── src/
+│       │   ├── dom-extractor.js  # Logic bóc tách DOM trang Grab
+│       │   └── payload-sender.js # Logic đóng gói JSON và POST về API
+│       ├── index.js              # Source chính của Bookmarklet
+│       └── README.md             # Hướng dẫn tạo Bookmark trên điện thoại
+│
+├── packages/                     # CÁC PACKAGE DÙNG CHUNG (SHARED MODULES)
+│   └── shared-types/             # Định nghĩa Type/Schema chung giữa Client & Server
+│       ├── index.js              # OrderStatus, PaymentStatus, TripStatus enums
+│       └── package.json
+│
+├── AGENT_TASK_PLAN.md            # File kế hoạch cho Antigravity Agent
+├── docker-compose.yml            # Khởi chạy toàn bộ stack (Database + API + Web)
+├── package.json                  # Root package.json (Quản lý Monorepo)
+└── README.md                     # Hướng dẫn chạy dự án
