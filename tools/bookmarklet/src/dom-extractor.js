@@ -79,7 +79,7 @@
       }
 
       const payload = { trip_id, orders };
-      const res = await fetch('http://localhost:3001/api/v1/sync-grab-orders', {
+      const res = await fetch('__API_BASE_URL__/api/v1/sync-grab-orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
