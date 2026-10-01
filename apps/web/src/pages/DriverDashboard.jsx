@@ -137,7 +137,9 @@ export default function DriverDashboard() {
     setOrders(updatedItems);
     
     // Call backend to persist
-    // fetch(`/api/v1/trips/${tripId}/reorder`, { method: 'PUT', body: JSON.stringify({ orders: updatedItems }) })
+    Promise.all(updatedItems.map(item => 
+      supabase.from('orders').update({ sequence: item.sequence }).eq('id', item.id)
+    )).catch(err => console.error('Failed to save reorder:', err));
   };
 
   const totalCOD = orders.reduce((sum, o) => o.delivery_status !== 'CANCELLED' ? sum + Number(o.cod_amount || 0) : sum, 0);
@@ -202,13 +204,24 @@ export default function DriverDashboard() {
                       <div
                         ref={provided.innerRef}
                         {...provided.draggableProps}
-                        className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border p-3 sm:p-4 transition-colors mb-3 ${order.delivery_status === 'CANCELLED' ? 'opacity-50 grayscale dark:border-gray-700' : 'border-gray-200 dark:border-gray-700'}`}
+                        className="relative mb-3"
                       >
-                        <div className="flex items-start">
-                          <div {...provided.dragHandleProps} className="p-1 sm:p-2 -ml-1 sm:-ml-2 mr-1 sm:mr-2 text-gray-400 dark:text-gray-500 self-center">
-                            <GripVertical size={20} className="sm:w-6 sm:h-6" />
-                          </div>
-                          <div className="flex-1 min-w-0">
+                        {/* Green connecting line - hidden on the last item */}
+                        {index !== orders.length - 1 && (
+                          <div className="absolute left-6 sm:left-8 top-14 bottom-[-24px] w-1 bg-green-500 z-0"></div>
+                        )}
+                        
+                        <div className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border p-3 sm:p-4 transition-colors relative z-10 ${order.delivery_status === 'CANCELLED' ? 'opacity-50 grayscale dark:border-gray-700' : 'border-gray-200 dark:border-gray-700'}`}>
+                          <div className="flex items-start">
+                            <div className="flex flex-col items-center mr-2 sm:mr-4">
+                              <div {...provided.dragHandleProps} className="p-1 sm:p-2 -mt-1 mb-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 transition-colors">
+                                <GripVertical size={20} className="sm:w-6 sm:h-6" />
+                              </div>
+                              <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-green-500 text-white flex items-center justify-center font-bold text-xs sm:text-sm shadow-md">
+                                {index + 1}
+                              </div>
+                            </div>
+                            <div className="flex-1 min-w-0">
                             <div className="flex flex-col sm:flex-row sm:justify-between items-start mb-2 gap-1 sm:gap-0">
                               <div className="flex justify-between w-full sm:w-auto items-start">
                                 <h3 className="font-bold text-base sm:text-lg text-gray-900 dark:text-white truncate pr-2">{order.recipient_name}</h3>
@@ -284,6 +297,7 @@ export default function DriverDashboard() {
                                     <XCircle size={18} className="sm:w-5 sm:h-5" />
                                   </button>
                                 )}
+                              </div>
                               </div>
                             </div>
                           </div>
