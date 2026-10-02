@@ -57,6 +57,7 @@ export default function DriverDashboard() {
   
   const [lang, setLang] = useState(() => localStorage.getItem('app_lang') || 'vi');
   const [theme, setTheme] = useState(() => localStorage.getItem('app_theme') || 'light');
+  const [driverId, setDriverId] = useState(() => localStorage.getItem('app_driver_id') || '');
   
   const t = DICT[lang];
 
@@ -74,8 +75,20 @@ export default function DriverDashboard() {
   }, [lang]);
 
   useEffect(() => {
-    fetchOrders();
-  }, [tripId]);
+    const params = new URLSearchParams(window.location.search);
+    const urlDriverId = params.get('driverId');
+    if (urlDriverId) {
+      localStorage.setItem('app_driver_id', urlDriverId);
+      setDriverId(urlDriverId);
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (driverId) {
+      fetchOrders();
+    }
+  }, [tripId, driverId]);
 
   // Persist to local storage whenever orders change (for instant reload backup)
   useEffect(() => {
@@ -85,11 +98,14 @@ export default function DriverDashboard() {
   }, [orders]);
 
   const fetchOrders = async () => {
-    // 1. Find the most recent trip_id in the database
+    if (!driverId) return;
+    
+    // 1. Find the most recent trip_id in the database for this driver
     let currentTripId = tripId;
     const { data: latestOrder, error: latestErr } = await supabase
       .from('orders')
       .select('trip_id')
+      .like('trip_id', `${driverId}-%`)
       .order('created_at', { ascending: false })
       .limit(1);
       
@@ -152,6 +168,28 @@ export default function DriverDashboard() {
     await supabase.from('orders').update({ payment_status: nextStatus }).eq('id', id);
   };
 
+  const handleCODChange = async (id, value) => {
+    let numVal = 0;
+    if (typeof value === 'string') {
+      value = value.toLowerCase().trim();
+      if (value.endsWith('k')) {
+        numVal = parseFloat(value.replace('k', '').replace(/,/g, '')) * 1000;
+      } else {
+        numVal = parseFloat(value.replace(/[^0-9.-]/g, ''));
+      }
+    } else {
+      numVal = value;
+    }
+    
+    if (isNaN(numVal)) numVal = 0;
+    
+    // Optimistic UI update
+    setOrders(orders.map(o => o.id === id ? { ...o, cod_amount: numVal } : o));
+    
+    // Background DB save
+    await supabase.from('orders').update({ cod_amount: numVal }).eq('id', id);
+  };
+
   const toggleShippingFeePayer = async (id, currentPayer) => {
     const nextPayer = currentPayer === 'SENDER' ? 'RECEIVER' : 'SENDER';
     const message = nextPayer === 'RECEIVER' ? t.confirmReceiver : t.confirmSender;
@@ -177,11 +215,60 @@ export default function DriverDashboard() {
     }
   };
 
+  if (!driverId) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
+         <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg w-full max-w-sm text-center">
+            <h2 className="text-xl font-bold mb-2 dark:text-white">Nhập Mã Tài Xế</h2>
+            <p className="text-gray-500 text-sm mb-6">Mã này được cấp khi bạn chạy Bookmarklet lần đầu trên trang Grab.</p>
+            <input 
+              id="driver_id_input"
+              type="text" 
+              placeholder="VD: DRV-1234" 
+              className="w-full p-3 border dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg mb-4 text-center text-lg font-bold uppercase"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  const val = e.target.value.trim().toUpperCase();
+                  if (val) {
+                    localStorage.setItem('app_driver_id', val);
+                    setDriverId(val);
+                  }
+                }
+              }}
+            />
+            <button 
+              onClick={() => {
+                const val = document.getElementById('driver_id_input').value.trim().toUpperCase();
+                if (val) {
+                  localStorage.setItem('app_driver_id', val);
+                  setDriverId(val);
+                }
+              }}
+              className="w-full bg-grab text-white p-3 rounded-lg font-bold hover:bg-green-600 transition-colors"
+            >
+              Đăng nhập / Bắt đầu
+            </button>
+         </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 transition-colors">
       <header className="bg-grab text-white p-3 sm:p-4 sticky top-0 z-10 shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0">
-        <h1 className="text-lg sm:text-xl font-bold truncate w-full">{t.trip}: {tripId}</h1>
+        <div className="flex flex-col w-full sm:w-auto">
+          <h1 className="text-lg sm:text-xl font-bold truncate">Dashboard</h1>
+          <span className="text-xs opacity-80">{driverId} | {tripId}</span>
+        </div>
         <div className="flex items-center gap-3 self-end sm:self-auto">
+          <button onClick={() => {
+            if(window.confirm('Bạn muốn đăng xuất?')) {
+              localStorage.removeItem('app_driver_id');
+              setDriverId('');
+            }
+          }} className="text-xs font-bold bg-white/20 px-2 py-1 rounded">
+            Đăng xuất
+          </button>
           <button onClick={() => setLang(lang === 'vi' ? 'en' : 'vi')} className="flex items-center gap-1 bg-white/20 px-2 py-1 rounded">
             <Globe size={16} /> <span className="font-bold text-sm">{lang.toUpperCase()}</span>
           </button>
@@ -270,7 +357,25 @@ export default function DriverDashboard() {
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-3 pt-3 border-t border-gray-100 dark:border-gray-700/50 gap-3 sm:gap-0">
                               <div className="flex flex-col">
                                 <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 font-medium">{t.codAmount}</span>
-                                <span className="font-bold text-base sm:text-lg text-gray-900 dark:text-white">{order.cod_amount.toLocaleString()} đ</span>
+                                <div className="flex items-center">
+                                  <input 
+                                    key={`cod-${order.id}-${order.cod_amount}`}
+                                    type="text" 
+                                    defaultValue={order.cod_amount > 0 ? order.cod_amount.toLocaleString() : ''}
+                                    placeholder="0"
+                                    className="font-bold text-base sm:text-lg text-gray-900 dark:text-white bg-transparent border-b border-dashed border-gray-300 hover:border-solid hover:border-gray-400 dark:border-gray-600 dark:hover:border-gray-500 focus:border-solid focus:border-grab focus:outline-none w-16 sm:w-20 transition-colors p-0 text-right focus:ring-0"
+                                    onFocus={(e) => {
+                                      // Remove formatting for easier editing
+                                      const val = e.target.value.replace(/[^0-9kK]/g, '');
+                                      if (val !== '0') e.target.value = val;
+                                    }}
+                                    onBlur={(e) => handleCODChange(order.id, e.target.value)}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') e.target.blur();
+                                    }}
+                                  />
+                                  <span className="font-bold text-base sm:text-lg text-gray-900 dark:text-white ml-1">đ</span>
+                                </div>
                               </div>
                               
                               <div className="flex flex-wrap gap-1.5 sm:gap-2 w-full sm:w-auto">

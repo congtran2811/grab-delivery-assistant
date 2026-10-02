@@ -1,7 +1,15 @@
 (async function() {
   async function extractData() {
     try {
-      const trip_id = `TRIP_${Date.now()}`;
+      let driverId = localStorage.getItem('grab_driver_id');
+      if (!driverId) {
+        driverId = 'DRV-' + Math.floor(1000 + Math.random() * 9000);
+        localStorage.setItem('grab_driver_id', driverId);
+      }
+      
+      // Generate daily trip ID so data is preserved across syncs today
+      const today = new Date().toISOString().slice(0, 10);
+      const trip_id = `${driverId}-${today}`;
       let orders = [];
       
       const findInputByLabel = (labelText) => {
@@ -44,7 +52,8 @@
         for (let i = 0; i < options.length; i++) {
           orderField.value = options[i].value;
           orderField.dispatchEvent(new Event('change', { bubbles: true }));
-          await new Promise(r => setTimeout(r, 300));
+          // Wait 1 second for Grab's network to fetch new order info on slow 4G
+          await new Promise(r => setTimeout(r, 1000));
           
           const rec = extractCurrentRecipient();
           orders.push({
@@ -86,7 +95,23 @@
       });
       const data = await res.json();
       
-      if(data.success) alert('Đồng bộ thành công! ' + data.data.length + ' đơn hàng.');
+      if(data.success) {
+        alert(`Đồng bộ thành công! ${data.data.length} đơn hàng.\n\n📌 Mã Tài Xế: ${driverId}`);
+        
+        // Inject a floating button to bypass popup blockers
+        const btn = document.createElement('a');
+        btn.href = `__DASHBOARD_URL__/?driverId=${driverId}`;
+        btn.target = '_blank';
+        btn.innerText = '👉 MỞ DASHBOARD 👈';
+        btn.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);z-index:999999;background:#00B14F;color:white;padding:20px 40px;font-size:20px;border-radius:12px;font-weight:bold;text-decoration:none;box-shadow:0 10px 25px rgba(0,0,0,0.5);text-align:center;font-family:sans-serif;white-space:nowrap;';
+        document.body.appendChild(btn);
+        
+        const closeBtn = document.createElement('div');
+        closeBtn.innerText = 'Đóng';
+        closeBtn.style.cssText = 'position:fixed;top:calc(50% + 50px);left:50%;transform:translateX(-50%);z-index:999999;color:#333;padding:10px 30px;font-size:16px;cursor:pointer;font-family:sans-serif;background:white;border-radius:20px;margin-top:20px;box-shadow:0 4px 10px rgba(0,0,0,0.2);font-weight:bold;';
+        closeBtn.onclick = () => { btn.remove(); closeBtn.remove(); };
+        document.body.appendChild(closeBtn);
+      }
       else alert('Đồng bộ thất bại: ' + data.error);
     } catch (e) {
       alert('Lỗi lấy dữ liệu: ' + e.message);

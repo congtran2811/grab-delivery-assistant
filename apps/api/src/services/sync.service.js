@@ -29,7 +29,7 @@ async function syncOrders(tripId, orders) {
       recipient_name: order.recipient_name,
       phone: order.phone,
       address: order.address,
-      cod_amount: order.cod_amount,
+      cod_amount: existing?.cod_amount !== undefined && existing?.cod_amount > 0 ? existing.cod_amount : order.cod_amount,
       shipping_fee_payer: order.shipping_fee_payer || 'SENDER',
       sequence: index, // Update sequence from bookmarklet
       // Preserve existing states or set defaults
@@ -48,6 +48,15 @@ async function syncOrders(tripId, orders) {
     .select();
 
   if (upsertError) throw upsertError;
+
+  // 4. Delete orders that are no longer in the payload (so the list is exactly identical to Grab)
+  const newOrderCodes = new Set(orders.map(o => o.order_code));
+  const ordersToDelete = existingOrders.filter(o => !newOrderCodes.has(o.order_code)).map(o => o.id);
+  
+  if (ordersToDelete.length > 0) {
+    await supabase.from('orders').delete().in('id', ordersToDelete);
+  }
+
   return upserted;
 }
 
