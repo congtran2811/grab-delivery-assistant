@@ -94,6 +94,8 @@ export default function DriverDashboard() {
   useEffect(() => {
     if (orders.length > 0) {
       localStorage.setItem('driver_orders', JSON.stringify(orders));
+    } else {
+      localStorage.removeItem('driver_orders');
     }
   }, [orders]);
 
@@ -218,6 +220,7 @@ export default function DriverDashboard() {
   const deleteAllOrders = async () => {
     if (window.confirm("CẢNH BÁO: Bạn có chắc chắn muốn XÓA TẤT CẢ đơn hàng trong phiên làm việc này không?")) {
       setOrders([]);
+      localStorage.removeItem('driver_orders');
       await supabase.from('orders').delete().eq('trip_id', tripId);
     }
   };
