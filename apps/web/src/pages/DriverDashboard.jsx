@@ -215,6 +215,13 @@ export default function DriverDashboard() {
     }
   };
 
+  const deleteAllOrders = async () => {
+    if (window.confirm("CẢNH BÁO: Bạn có chắc chắn muốn XÓA TẤT CẢ đơn hàng trong phiên làm việc này không?")) {
+      setOrders([]);
+      await supabase.from('orders').delete().eq('trip_id', tripId);
+    }
+  };
+
   if (!driverId) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
@@ -260,7 +267,12 @@ export default function DriverDashboard() {
           <h1 className="text-lg sm:text-xl font-bold truncate">Dashboard</h1>
           <span className="text-xs opacity-80">{driverId} | {tripId}</span>
         </div>
-        <div className="flex items-center gap-3 self-end sm:self-auto">
+        <div className="flex items-center gap-3 self-end sm:self-auto flex-wrap justify-end">
+          {orders.length > 0 && (
+            <button onClick={deleteAllOrders} className="text-xs font-bold bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600 transition-colors shadow-sm">
+              Xóa Hết
+            </button>
+          )}
           <button onClick={() => {
             if(window.confirm('Bạn muốn đăng xuất?')) {
               localStorage.removeItem('app_driver_id');
