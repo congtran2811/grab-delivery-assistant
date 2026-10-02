@@ -102,19 +102,10 @@ export default function DriverDashboard() {
   const fetchOrders = async () => {
     if (!driverId) return;
     
-    // 1. Find the most recent trip_id in the database for this driver
-    let currentTripId = tripId;
-    const { data: latestOrder, error: latestErr } = await supabase
-      .from('orders')
-      .select('trip_id')
-      .like('trip_id', `${driverId}-%`)
-      .order('created_at', { ascending: false })
-      .limit(1);
-      
-    if (!latestErr && latestOrder && latestOrder.length > 0) {
-      currentTripId = latestOrder[0].trip_id;
-      setTripId(currentTripId); // Update the header to show the correct trip ID
-    }
+    // 1. Always use today's trip ID to match the Bookmarklet exactly
+    const today = new Date().toISOString().slice(0, 10);
+    const currentTripId = `${driverId}-${today}`;
+    setTripId(currentTripId);
 
     // 2. Try to fetch orders for this trip from Supabase
     const { data, error } = await supabase
@@ -134,14 +125,9 @@ export default function DriverDashboard() {
       setOrders(JSON.parse(saved));
       return;
     }
-
-    // 3. Fallback to Mock Data
-    const mock = [
-      { id: '1', order_code: 'ORD-123', recipient_name: 'John', address: '123 Fake St', cod_amount: 150000, shipping_fee_payer: 'SENDER', shipping_fee_status: 'UNPAID', payment_status: 'UNPAID', delivery_status: 'PENDING', sequence: 0 },
-      { id: '2', order_code: 'ORD-124', recipient_name: 'Jane', address: '456 Main St', cod_amount: 0, shipping_fee_payer: 'RECEIVER', shipping_fee_status: 'COLLECTED', payment_status: 'PAID_ONLINE', delivery_status: 'PENDING', sequence: 1 },
-      { id: '3', order_code: 'ORD-125', recipient_name: 'Bob', address: '789 Park Ave', cod_amount: 50000, shipping_fee_payer: 'SENDER', shipping_fee_status: 'UNPAID', payment_status: 'UNPAID', delivery_status: 'PENDING', sequence: 2 },
-    ];
-    setOrders(mock);
+    
+    // 4. If no orders found anywhere, ensure state is empty
+    setOrders([]);
   };
 
   const onDragEnd = async (result) => {
